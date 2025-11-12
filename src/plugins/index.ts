@@ -1,3 +1,4 @@
+import { multiTenantPlugin } from '@payloadcms/plugin-multi-tenant'
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { nestedDocsPlugin } from '@payloadcms/plugin-nested-docs'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
@@ -10,8 +11,9 @@ import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/
 import { searchFields } from '@/search/fieldOverrides'
 import { beforeSyncWithSearch } from '@/search/beforeSync'
 
-import { Page, Post } from '@/payload-types'
+import { Page, Post, Config } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
+import { isSuperAdmin } from '@/access/is-superadmin'
 
 const generateTitle: GenerateTitle<Post | Page> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Website Template` : 'Payload Website Template'
@@ -87,6 +89,23 @@ export const plugins: Plugin[] = [
       fields: ({ defaultFields }) => {
         return [...defaultFields, ...searchFields]
       },
+    },
+  }),
+  multiTenantPlugin<Config>({
+    collections: {
+      pages: {},
+      posts: {},
+      media: {},
+      // header: {
+      //   isGlobal: true
+      // },
+      // footer: {
+      //   isGlobal: true
+      // }
+    },
+    userHasAccessToAllTenants: (user) => isSuperAdmin(user),
+    tenantsArrayField: {
+      includeDefaultField: false,
     },
   }),
 ]
